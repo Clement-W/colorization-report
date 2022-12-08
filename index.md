@@ -75,7 +75,10 @@ In the following sections, we dissect why a conditional diffusion model works, t
 
 Below, is a visualization of this project's sequencing/progress. The image displays, as requested, four solid weeks of work. Additionally, we provide [here](https://trello.com/invite/b/EfGXzV9j/ATTI5b46ac6a331db37c54495c8a4ae25e13EADADB82/colorized-project) a link to our Trello board, which further expresses our dedication to the task at hand. Work was evenly dispersed, therefore we find no need to categorize individual contributions. 
 
-<img src="assets/Project_Management_Vis.png" >
+<img src="assets/Project_Management_Vis.png" align="center" >
+<br>
+<div style='text-align:center'> <b>Figure 1</b>: Project management </div>
+
 
 <div id="Theory"></div>
 
@@ -519,23 +522,22 @@ Thus, our loss function is complete.
 As mentioned prior to the Loss Function section, we have not conditioned our $p_{\theta}$ on $\mathbf{z}$. This has no effect on the derivation of our loss. However, the algorithms we use during training and inference will differ slightly from a 'standard' diffusion model. This is characterized below:
 
 <img src="assets/Algorithm_1.png" align="center"/>
+<br>
+<div style='text-align:center'> <b>Figure 2</b>: Algorithm 1 </div>
+
 
 For line 2, we have no conditioned variables. As our dataset is in the form of pairs (input-output images [10]), we sample this pair to eventually have a point of reference for our model ($\mathbf{x_0}$ is the starting colored image, while $\mathbf{z}$ is the same image greyscaled).
 
 <img src="assets/Algorithm_2.png" align="center"/>
+<br>
+<div style='text-align:center'> <b>Figure 3</b>: Algorithm 2 </div>
+
 
 In both algorithms, note that $\mathbf{\epsilon}_\theta$ has an additional parameter $\mathbf{z}$. In essence, this added parameter allows us to both gather more information during the diffusion process, as well as provides a base image to concatenate the reversed noise onto. A more detailed explanation can be found in the Implementation section below.
 
 <div id="Implementation"></div>
 
 ## Implementation
-
-```
-you may argue to use a build-in implementation if the algorithm involved is
-overly complicated but necessary to the task. After solving the task with your own
-implementation, you may also, in a separate notebook, use a built-in implementation
-and compare performance.
-```
 
 As our project is quite ambitious, the most complex part was to understand how diffusion models work. This is why, most of our work and of our research is explained in the theory section. Concerning the implementation, most of the papers we are reffering to, published their code in github ([9],[11]). As exploring and understanding the theory behind diffusion models took us 3 to 4 weeks in total, we have chosen to draw inspiration from these github repository, as well as articles going through these implementations like [the one from Hugging Face](https://huggingface.co/blog/annotated-diffusion). Even though we got inspired from these codes, we can note that some algorithms had to be modified to adapt to conditional diffusion.
 
@@ -579,7 +581,7 @@ The most complex part of the implementation, is designing the neural network. Th
 
 <img src="assets/u-net-architecture.png" alt="unet architecture picture" style="height: 400px" align="center"/>
 <br>
-<div style='text-align:center'> <b>Figure 1</b>: Base U-Net architecture </div>
+<div style='text-align:center'> <b>Figure 4</b>: Base U-Net architecture </div>
 
 
 This architecture first downsamples the input in term of spatial resolution, but with more and channels because of the convolutions (64 -> 128 -> 256 -> 512 -> 1024). It also has a bottleneck in the middle that allow the network to learn the most important information to perform the task. Then, an upsampling is performed in order to output an image of the same shape as the input. Between the layers of identical size of the encoder and decoder, there is also residual connections (or skip connections), which improves the gradient flow.
@@ -642,7 +644,7 @@ Now that we defined the main building blocks of our custom U-Net, let's expand i
 
 <div id="Encoder"></div>
 
-##### Encoder
+##### **Encoder**
 
 | **Layer**          	| **No Input channels** 	| **No Output channels** 	|
 |--------------------	|:---------------------:	|------------------------	|
@@ -659,7 +661,7 @@ Now that we defined the main building blocks of our custom U-Net, let's expand i
    The encoder downscale the image while adding more and more feature maps.
 
 
-##### Bottleneck
+##### **Bottleneck**
 
 | **Layer**          	| **No Input channels** 	| **No Output channels** 	|
 |--------------------	|:---------------------:	|------------------------	|
@@ -670,7 +672,7 @@ The bottleneck is the part of the network with the lowest image dimension, which
 
 <div id="Decoder"></div>
 
-##### Decoder
+##### **Decoder**
 
 | **Layer**          	| **No Input channels** 	| **No Output channels** 	|
 |--------------------	|:---------------------:	|------------------------	|
@@ -726,20 +728,20 @@ We repeat this until converged. Note, again, that our loss function is essential
 We trained the network for 5 epochs with 2000 images (see `notebook/train.ipynb`) in order to be able to produce results. The results of our project can be found in the notebook in the folder `demo`. First, the forward process is working well. Here is the forward process using the linear schedule on 300 timesteps ($T = 300$):
 <img src="assets/linearschedule.png" alt="Linear schedule" style="width: 800px" align="center"/>
 <br>
-<div style='text-align:center'> <b>Figure 2</b>: Forward process with linear schedule </div>
+<div style='text-align:center'> <b>Figure 5</b>: Forward process with linear schedule </div>
 
 Now the results of the reverse process are not satisfying. This not suprising as the network has only be trained for 5 epochs. Here, we try to colorize this image:
 
 <img src="assets/grayscale.png" alt="Grayscale image" style="width: 100" align="center"/>
 <br>
-<div style='text-align:center'> <b>Figure 3</b>: Grayscale image that we seek to colorize </div>
+<div style='text-align:center'> <b>Figure 6</b>: Grayscale image that we seek to colorize </div>
 
 
 Then, here is 10 evenly separated noisy images from $\mathbf{x_T}$ to $\mathbf{x_0}$, using $T=300$:
 
 <img src="assets/reverse.png" alt=" image" style="width: 800" align="center"/>
 <br>
-<div style='text-align:center'> <b>Figure 4</b>: Reverse process</div>
+<div style='text-align:center'> <b>Figure 7</b>: Reverse process</div>
 
 We notice that the noisy image is changing across the timesteps. We also notice some sort of structure in the noisy image, which slightly resembles the branch on the right of the image. Finally, this model output a (non accurate) colorized version of the grayscale image.
 
@@ -750,8 +752,6 @@ We notice that the noisy image is changing across the timesteps. We also notice 
 As stated previously, we spent most of the time doing research and working on the theory side of conditional diffusion models. Thus, the time left for the implementation part was shorter as expected. It was still important for us to have the whole pipeline working, so the project can be improved by adding features. This is why we trained a small model on a small amount of data. A first limit of this training is that only 2000 images was used. This is mostly due to a lack of RAM from our computers, but we also wanted to use a subset of the dataset to make the training faster. We also did not created a test and validation set, as we knew that results won't be interpretable. At first, we planned to evaluate the model using the FID (Fréchet inception distance) score, which is a metrics used to evaluate generative models. For lack of time, we decided to not implement the `eval` method present in `scripts/eval.py`, and focus on this readme file. Finally, the results we obtained are far from being the colorized input image. As the entire pipeline is already written, the model needs to be improved, and the dataset needs to be better handled. Thereafter, we could expect better results.
 
 We can also note that, diffusion models are a very recent research topic, we are working on research papers from 2 years ago or even from 2022. This makes the project really challenging when it comes to research.
-
-....
 
 <div id="Installation"></div>
 
