@@ -14,7 +14,16 @@ Vivek Shome
         <li> <a href="#Introduction">Introduction</a></li>
         <li> <a href="#Project_Management"> Project Management </a> </li>
         <li> <a href="#Instructions"> Instructions </a></li>
-        <li> <a href="#Theory">Theory </a> </li>
+        <details> <summary> <a href="#Theory">Theory </a></summary> 
+                <ul>
+                    <li><a href="#Theory_General">General Theory</a></li>
+                    <li><a href="#Notation">Notation</a></li>
+                    <li><a href="#Forward_Diffusion_Theory">Forward Diffusion Theory</a></li>
+                    <li><a href="#Reverse_Diffusion_Theory">Reverse Diffusion Theory</a></li>
+                </ul>
+        </details>
+        <li><a href="#Loss_Function">Loss Function</a></li>
+        <li><a href="#Algo_Changes">Changes in the Algorithms</a></li>
         <details> 
             <summary> <a href="#Implementation"> Implementation </a> </summary>
             <ul> 
@@ -50,10 +59,6 @@ Vivek Shome
     </ul>
 </details>
 
-## Instructions (delete this once finished)
-    
-Your README.md file (located at the root of your project directory) should completely describe the project, what it accomplishes, how well it performs, and walk through how a new user can use your model on their own data after cloning the repository. This means, by following instructions in your README.md file, I should easily be able to run your algorithm on a new example not in your dataset and see that the model accomplishes what it promised to accomplish (at least up to your claimed performance measure).
-
 <div id="Introduction"></div>
 
 ## Introduction
@@ -63,11 +68,6 @@ The real world problem we sought to solve was the colorization of greyscale imag
 As the information on this direct concept is fairly sparse, we took it upon ourselves to seek an understanding of the model at every level. Moreover, we recognized the value of comprehending all mathematical theory involved (as this is a math course), and have thus detailed below the theory, as well as the steps we took to grasp each idea. We would like to emphasize the amount of time which went into both the writing, as well as the thought, behind each step in the process. This project was quite ambitious, so we additionally acknowledge the tradeoff made between performance of the model, and the depth in which we understood it.
 
 In the following sections, we dissect why a conditional diffusion model works, the mathematics behind it, and the implementation of said model.
-
-**LEAVE FOR NOW (until we talk about FID)**
-###### How will you measure your performance of the task?
-
-To measure the performance of the task, we will use the [Fréchet Inception Distance](<[https://en.wikipedia.org/wiki/Fr%C3%A9chet_inception_distance](https://en.wikipedia.org/wiki/Fr%C3%A9chet_inception_distance)>) (FID). The FID metric compares the distribution of generated images with the distribution of a set of real images (ground truth). The FID metric was introduced in 2017 and is the current standard metric for assessing the quality of generative models.
 
 <div id="Project_Management"></div>
 
@@ -79,16 +79,19 @@ Below, is a visualization of this project's sequencing/progress. The image displ
 
 <div id="Theory"></div>
 
-
 ## Theory of Conditional Diffusion Process
 
 Brennan Whitfield - Clément Weinreich - Vivek Shome
+
+<div id="Theory_General"></div>
 
 ### General Idea
 
 The idea of diffusion models is to slowly destroy structure in a data distribution through an iterative forward process. Then, we learn a reverse diffusion process using an neural network, that restores structure in data. This model yield to a highly flexible generative model of the data. This can be seen as a Markov chain of diffusion steps, which slowly add random noise to the data, and then learn to reverse the diffusion process in order to construct new desired data samples from the noise. 
 
 In the case of image colorization, we use a conditional diffusion model which, on top of requiring a noisy image and timestep, takes a grayscale image with the intent of recoloring said image. 
+
+<div id="Notation"></div>
 
 ### Notation
 
@@ -102,7 +105,7 @@ The following notation will be adopted for the next parts:
 -   $q(\mathbf{x_t}|\mathbf{x_{t-1}})$ corresponds to the forward process, taking an image $\mathbf{x_{t-1}}$ as input, and output $\mathbf{x_t}$ which contains more noise
 -   $p_\theta(\mathbf{x_{t-1}}|\mathbf{x_t})$ corresponds to the reverse process, taking an image $\mathbf{x_t}$ as input, and output $\mathbf{x_{t-1}}$ which contains less noise
 
-### Common Functions
+<div id="Forward_Diffusion_Theory"></div>
 
 
 ### The Forward Diffusion Process
@@ -172,6 +175,9 @@ $$q(\mathbf{x_t} | \mathbf{x_0}) = \mathcal{N}(\mathbf{x_t};\sqrt{\bar{\alpha_t}
 
 It is clear that we can quickly sample a noisy image $\mathbf{x_t}$ at any timestep t. Given that we are using a conditional diffusion model, this allows us to randomly sample a timestep during training and quickly compute values as to speed up the process. Further, as we are iteravitely adding noise to the original image, we do not need to condition the forward process on our original greyscale.
 
+<div id="Reverse_Diffusion_Theory"></div>
+
+
 ### The Reverse Process
 
 To reverse the above noising process (i.e. $q(\mathbf{x_{t-1}}|\mathbf{x_t})$ ), we would need to know the entire dataset of possible noised images, which is essentially impossible. Thus, we seek to learn an _approximation_ of this reverse process. We will call this approximation $p_\theta$. Note that since we are using a conditional diffusion model, we make use of our $\mathbf{z}$ from above to condition the reverse process.
@@ -198,6 +204,8 @@ $$q(\mathbf{x_{t-1}} | \mathbf{x_t}, \mathbf{x_0}) = \mathcal{N}(\mathbf{x_{t-1}
 Here, $\mathbf{\tilde{\mu_t}}$ and $\tilde{\beta_t}$ are the theoretical values of mean and variance. This is because we are using the forward process, wherein we are aware of the mean and variance at each step.
 
 Before proceeding into our discussion on the loss function, we would like to make note of the absense of $\mathbf{z}$. The additional condition on $p_{\theta}$ has no (noticeable) mathematical change on the derivation. For the sake of simplicity, we refrain from conditioning on $\mathbf{z}$ in the following section.
+
+<div id="Loss_Function"></div>
 
 ## Loss Function
 
@@ -244,8 +252,6 @@ L_{\text{VLB}} &= D_{\text{KL}}(q(\mathbf{x_{1:T}} | \mathbf{x_{0}}) || p_{\thet
               &= \mathbb{E}_ {q(\mathbf{x_{1:T}} | \mathbf{x_{0}})} \Big[ \log \Big ( \frac{q(\mathbf{x_{1:T}} | \mathbf{x_{0}})}{p_{\theta}(\mathbf{x_{0:T}})} \big ) \Big ] + \log p_{\theta}(\mathbf{x_{0}}) - \log{p_{\theta}(\mathbf{x_{0}})} \\
               &= \mathbb{E}_ {q(\mathbf{x_{0:T}} | \mathbf{x_{0}})} \Big[ \log \Big ( \frac{q(\mathbf{x_{1:T}} | \mathbf{x_{0}})}{p_{\theta}(\mathbf{x_{0:T}})} \Big) \Big ]\\
 \end{align*}
-
-**(Q: Why does the expected value switch to 0:T in the weng article?)**
 
 However, we cannot compute this simplified VLB, as the denominator would require us to already know the reverse conditionals. Thus, we again rewrite our VLB as:
 
@@ -506,6 +512,8 @@ where $C = L_0 + C_t$ is a constant which do not depends on $\theta$.
 
 Thus, our loss function is complete.
 
+<div id="Algo_Changes"></div>
+
 ## Algorithmic Changes in Conditional Diffusion Model
 
 As mentioned prior to the Loss Function section, we have not conditioned our $p_{\theta}$ on $\mathbf{z}$. This has no effect on the derivation of our loss. However, the algorithms we use during training and inference will differ slightly from a 'standard' diffusion model. This is characterized below:
@@ -518,36 +526,6 @@ For line 2, we have no conditioned variables. As our dataset is in the form of p
 
 In both algorithms, note that $\mathbf{\epsilon}_\theta$ has an additional parameter $\mathbf{z}$. In essence, this added parameter allows us to both gather more information during the diffusion process, as well as provides a base image to concatenate the reversed noise onto. A more detailed explanation can be found in the Implementation section below.
 
-
-
-## References
-
-[1] Weng, Lilian. (Jul 2021). What are diffusion models? Lil’Log. https://lilianweng.github.io/posts/2021-07-11-diffusion-models/.
-
-[2] Jascha Sohl-Dickstein et al. “Deep Unsupervised Learning using Nonequilibrium Thermodynamics.” ICML 2015. https://arxiv.org/abs/1503.03585
-
-[3] J. Chang, February 2, 2007. "Markov chains
-" http://www.stat.yale.edu/~pollard/Courses/251.spring2013/Handouts/Chang-MarkovChains.pdf
-
-[4] Feller, W. On the theory of stochastic processes, with particular reference to applications. In Proceedings of the
-[First] Berkeley Symposium on Mathematical Statistics
-and Probability. The Regents of the University of California, 1949.
-
-[5] Deep Learning (Ian J. Goodfellow, Yoshua Bengio and Aaron Courville), MIT Press, 2016. https://www.deeplearningbook.org/
-
-[6] Weng, Lilian. 2018. From Autoencoder to Beta-VAE. "https://lilianweng.github.io/posts/2018-08-12-vae/"
-
-
-[7] Feller, W. (1966). An introduction to probability theory and its applications (Vol. 2). John Wiley & Sons.
-
-[8] Kingma, Diederik P.; Welling, Max (2014-05-01). "Auto-Encoding Variational Bayes". https://arxiv.org/abs/1312.6114.
-
-[9] Ho, Jonathan, et al. "Denoising Diffusion Probabilistic Models" https://arxiv.org/pdf/2006.11239.pdf
-
-[10] Saharia, Chitwan, et al. "Image Super-Resolution via Iterative Refinement
-". https://arxiv.org/pdf/2104.07636.pdf.
-
-
 <div id="Implementation"></div>
 
 ## Implementation
@@ -559,7 +537,7 @@ implementation, you may also, in a separate notebook, use a built-in implementat
 and compare performance.
 ```
 
-As our project is quite ambitious, the most complex part was to understand how diffusion models work. This is why, most of our work and of our research is explained in the theory section. Concerning the implementation, most of the papers we are reffering to, published their code in github ([11],[12]). As exploring and understanding the theory behind diffusion models took us 3 to 4 weeks in total, we have chosen to draw inspiration from these github repository, as well as articles going through these implementations like [the one from Hugging Face](https://huggingface.co/blog/annotated-diffusion). Even though we got inspired from these codes, we can note that some algorithms had to be modified to adapt to conditional diffusion.
+As our project is quite ambitious, the most complex part was to understand how diffusion models work. This is why, most of our work and of our research is explained in the theory section. Concerning the implementation, most of the papers we are reffering to, published their code in github ([9],[11]). As exploring and understanding the theory behind diffusion models took us 3 to 4 weeks in total, we have chosen to draw inspiration from these github repository, as well as articles going through these implementations like [the one from Hugging Face](https://huggingface.co/blog/annotated-diffusion). Even though we got inspired from these codes, we can note that some algorithms had to be modified to adapt to conditional diffusion.
 
 As our project requires to use a neural network with an encoder-decoder architecture with complex types of layers, we are using the python library PyTorch. Thus, most of the objects that we are manipulating are not numpy arrays, but PyTorch tensors. These tensors behaves like numpy arrays, but are more convenient to track the operations and therefore compute the gradients required by the backpropagation step. To do so, PyTorch uses automatic differenciation, which consists of building an implicit computational graph when performing mathematical operations. By knowing the derivative of elementary mathematical operations, it is then possible to compute efficiently the gradient of every functions. 
 
@@ -568,10 +546,10 @@ As our project requires to use a neural network with an encoder-decoder architec
 ### Diffusion basics
 
 In the theory section, we often make reference to $\bar{\beta}_t$ or $\bar{\alpha}_t$. To compute the noise scheduler, we implemented two different schedules:
-- The cosine schedule which is implemented the same way as proposed in [12]:
+- The cosine schedule which is implemented the same way as proposed in [11]:
 $$\bar{\alpha}_t = \frac{f(t)}{f(0)}, f(t) = cos\Big(\frac{t/T + s}{1 + s}  \frac{\pi}{2}\Big)^2$$
 $$\beta_t = 1 - \frac{\bar{\alpha}_t}{\bar{\alpha}_{t-1}}$$
-- The linear schedule which is implemented the same way as proposed in [11], with the same constants. Thus, it just a list of evenly spaced numbers starting from 0.0001 to 0.02.
+- The linear schedule which is implemented the same way as proposed in [9], with the same constants. Thus, it just a list of evenly spaced numbers starting from 0.0001 to 0.02.
 
 In order to improve the speed of the algorithms, the values of many constants are computed, and stored in the class `ConstantDiffusionTerms`. This consists of lists containing all the values from $t=0$ to $t=T$ of:
 $$\beta_t, \alpha_t, \bar{\alpha}_t, \bar{\alpha}_{t-1}, \frac{1}{\sqrt{\alpha_t}}, \sqrt{\bar{\alpha}_t}, \sqrt{1 - \bar{\alpha}_t}, \tilde{\beta}_t, \sqrt{\tilde{\beta}_t}$$
@@ -597,7 +575,7 @@ Thus, we only need to compute a random noise $\mathbf{\epsilon} \sim \mathcal{N}
 
 #### Overview of the U-Net architecture
 
-The most complex part of the implementation, is designing the neural network. This neural network has an encoder-decoder architecture as used in the Variational Auto Encoder. More precisely, the U-Net architecture was used in [11], and offers good results. The same type of architecture was used in [12], [13] and [14]. Here is the idea of this architecture:
+The most complex part of the implementation, is designing the neural network. This neural network has an encoder-decoder architecture as used in the Variational Auto Encoder. More precisely, the U-Net architecture was used in [9], and offers good results. The same type of architecture was used in [11], [12] and [10]. Here is the idea of this architecture:
 
 <img src="assets/u-net-architecture.png" alt="unet architecture picture" style="height: 400px" align="center"/>
 <br>
@@ -606,7 +584,7 @@ The most complex part of the implementation, is designing the neural network. Th
 
 This architecture first downsamples the input in term of spatial resolution, but with more and channels because of the convolutions (64 -> 128 -> 256 -> 512 -> 1024). It also has a bottleneck in the middle that allow the network to learn the most important information to perform the task. Then, an upsampling is performed in order to output an image of the same shape as the input. Between the layers of identical size of the encoder and decoder, there is also residual connections (or skip connections), which improves the gradient flow.
 
-In recent work on Diffusion models ([11],[12],[13],[14]), it has been shown that the self-attention layers greatly improves the results of diffusion models. In this first implementation, we made the choice of not implementing attention layers. As we don't have the computing power to train a model with hundreds of millions of parameters, we also reduced the size of the network in terms of depth and number of convolution kernels.
+In recent work on Diffusion models ([9],[11],[12],[10]), it has been shown that the self-attention layers greatly improves the results of diffusion models. In this first implementation, we made the choice of not implementing attention layers. As we don't have the computing power to train a model with hundreds of millions of parameters, we also reduced the size of the network in terms of depth and number of convolution kernels.
 
 In this section, each main blocks are described, in order to present the architecture of our custom U-Net.
 
@@ -614,7 +592,7 @@ In this section, each main blocks are described, in order to present the archite
 
 #### Timestep embedding
 
-As seen in the theory part, the neural network must also take the timestep $t$ (indication on the noise level) as input. The authors of [11] employed the sinusoidal position embedding to encode $t$. The sinusoidal position embedding has been proposed by the famous Transformer architecture [15]. Sinusoidal positional embedding aims to generate an embedding that take into account the order of the information, using the sin and cos functions. So it takes a integer $t$ as input, and output a vector in $\mathbb{R}^d$, $d$ being the desired embedding dimension.
+As seen in the theory part, the neural network must also take the timestep $t$ (indication on the noise level) as input. The authors of [9] employed the sinusoidal position embedding to encode $t$. The sinusoidal position embedding has been proposed by the famous Transformer architecture [13]. Sinusoidal positional embedding aims to generate an embedding that take into account the order of the information, using the sin and cos functions. So it takes a integer $t$ as input, and output a vector in $\mathbb{R}^d$, $d$ being the desired embedding dimension.
 
 The sinusoidal positional embedding is defined by a function $f: \mathbb{N} \to \mathbb{R}^d$:
 
@@ -631,7 +609,7 @@ This positional encoding forms a geometric progression from $2\pi$ to $10000 \cd
 
 #### Conditional image input
 
-The dataset consists of input-output image pairs $\{z_i,x_i\}^N_{i=1}$ where the samples are sampled from an unknown conditional distribution $p(x|z)$. Here, $x$ is the color image and $z$ is the grayscale image. This conditional input $z$ is given to the denoising model $\epsilon_\theta$, in addition to the noisy target image $x_t$ and the timestep $t$. In practice, to condition the model we followed the work of [14]. The input $z$ is concatenated with $x_t$ along the channel dimension before entering the first layer of the U-Net. 
+The dataset consists of input-output image pairs $\{z_i,x_i\}^N_{i=1}$ where the samples are sampled from an unknown conditional distribution $p(x|z)$. Here, $x$ is the color image and $z$ is the grayscale image. This conditional input $z$ is given to the denoising model $\epsilon_\theta$, in addition to the noisy target image $x_t$ and the timestep $t$. In practice, to condition the model we followed the work of [10]. The input $z$ is concatenated with $x_t$ along the channel dimension before entering the first layer of the U-Net. 
 
 <div id="Core_Convolution_Block"></div>
 
@@ -643,7 +621,7 @@ The core convolution block is the elementary block of the bigger blocks describe
 
 #### Resnet Block
 
-In our implementations, we have chosen to use the residual block as employed by [11]. The resnet block take as input an image but also the timestep embedded with sinusoidal embedding. At first, the input image goes through the first core convolution block. At the same time, the embedded timestep is sent through a one layer perceptron that output a vector of the same size as the number of kernels applied in the first core convolution block. Then, the timestep is reshaped in order to be compatible in number of dimensions with the output of the first core convolution block. This allows us to add the output of the MLP, with the output of the first convolution block. The result is then sent through another core convolution block.
+In our implementations, we have chosen to use the residual block as employed by [9]. The resnet block take as input an image but also the timestep embedded with sinusoidal embedding. At first, the input image goes through the first core convolution block. At the same time, the embedded timestep is sent through a one layer perceptron that output a vector of the same size as the number of kernels applied in the first core convolution block. Then, the timestep is reshaped in order to be compatible in number of dimensions with the output of the first core convolution block. This allows us to add the output of the MLP, with the output of the first convolution block. The result is then sent through another core convolution block.
 
 The last step consists in adding the residual connection, which corresponds to add the input image of the resnet block, with the last result. If the case where the channel dimension is incompatible between those two, we apply a convolution with a kernel of size 1 in order to make them compatible.
 
@@ -713,13 +691,13 @@ The decoder upsample the input features from the bottlenck, in order to output a
 
 ### Reverse process
 
-The reverse process (or 'inference' for our purposes) follows exactly from Algorithm 2 **LINK TO ABOVE ALGORITHM** of the Theory section above. We begin by sampling a completely noisy image $\mathbf{x_T}$ from a Gaussian distribution $\mathcal{N}(\mathbf{0},\mathbf{I})$. As our goal is to subtract noise from this image until we have the desired $\mathbf{x_0}$, at each timestep $0 \leq t \leq T$, we begin by sampling random noise $\mathbf{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$. Next, since each step can be seen as calculating $\mathbf{x_{t-1}}$ from $\mathbf{x_t}$ **LINK THIS TO COMMON TERMS SECTION**, we perform the reparameterization trick to achieve:
+The reverse process (or 'inference' for our purposes) follows exactly from <a href="#Algo_Changes">Algorithm 2</a> of the <a href="#Theory">Theory</a> section above. We begin by sampling a completely noisy image $\mathbf{x_T}$ from a Gaussian distribution $\mathcal{N}(\mathbf{0},\mathbf{I})$. As our goal is to subtract noise from this image until we have the desired $\mathbf{x_0}$, at each timestep $0 \leq t \leq T$, we begin by sampling random noise $\mathbf{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$. Next, since each step can be seen as calculating $\mathbf{x_{t-1}}$ from $\mathbf{x_t}$, we perform the reparameterization trick to achieve:
 
 $$\mathbf{x_{t-1}} = \frac{1}{\sqrt{\alpha_t}} \Big( \mathbf{x_t} - \frac{1 - \alpha_t}{\sqrt{1-\bar{\alpha}_t}} \mathbf{\epsilon}_\theta (\mathbf{x_t}, \mathbf{z},t) \Big) + \sqrt{\beta_t}\mathbf{\epsilon}$$
 
 Thanks to our ```ConstantDiffusionTerms``` class, many of these closed forms are already computed.
 
-Thus, we use our model $\mathbf{\epsilon}_{\theta}$ to predict the noise between steps, and feed this predicted noise into the reparameterization of the predicted mean **THIS CAN ALSO BE FOUND IN THEORY ABOVE**:
+Thus, we use our model $\mathbf{\epsilon}_{\theta}$ to predict the noise between steps, and feed this predicted noise into the reparameterization of the <a href="#Loss_Function">predicted mean</a>:
 
 $$\mu_{\theta}(\mathbf{x_t}, t) = \frac{1}{\sqrt{\alpha_t}} \Big( \mathbf{x_t} - \frac{1 - \alpha_t}{\sqrt{1-\bar{\alpha}_t}} \mathbf{\epsilon}_\theta (\mathbf{x_t}, \mathbf{z},t) \Big)$$
 
@@ -729,7 +707,7 @@ This gives us $\mathbf{x_{t-1}}$. Repeating this process T times yields us $\mat
 
 ### Training
 
-To train this model, we look to Algorithm 1 **LINK TO ABOVE**. As diffusion models seek to produce images closely correlated with the data they are trained on, we sample a color-greyscale image pair $(\mathbf{x_0}, \mathbf{z})$ from our data distribution $p(\mathbf{x}, \mathbf{z})$. Then, we sample a random timestep t from a uniform distribution of timesteps $\{ 1, \dots, T \}$, and as discussed in the theory section above, we can use the Markov Property to produce a noisy image $\mathbf{x_{t}}$ at said timestep:
+To train this model, we look to <a href="#Algo_Changes">Algorithm 1</a>. As diffusion models seek to produce images closely correlated with the data they are trained on, we sample a color-greyscale image pair $(\mathbf{x_0}, \mathbf{z})$ from our data distribution $p(\mathbf{x}, \mathbf{z})$. Then, we sample a random timestep t from a uniform distribution of timesteps $\{ 1, \dots, T \}$, and as discussed in the theory section above, we can use the Markov Property to produce a noisy image $\mathbf{x_{t}}$ at said timestep:
 
 $$\mathbf{x_t} = \sqrt{\bar{\alpha}_t}\mathbf{x_0}+\sqrt{1 - \bar{\alpha}_t}\epsilon$$
 
@@ -843,33 +821,39 @@ To conclude, we would like to bring attention back to the proposal of this work:
 
 "We seek to recolor grayscale photographs..."
 
-_Technically_ we are completely inline with our objective. We 
+_Technically_ we are completely inline with our objective, the colors are just not the right ones, or in the right place.
 
-
-eenjoyed project
-
-HUGELY ambitious
-
-learned a LOT
-
-happy to have an entire working pipeline, seek improvements
-
-TECHNICALLY we did _colorize_ the image. We never claimed to do this _properly_.
 <div id="References"></div>
 
 ## References
+[1] Weng, Lilian. (Jul 2021). What are diffusion models? Lil’Log. https://lilianweng.github.io/posts/2021-07-11-diffusion-models/.
 
-[11] DDPM https://arxiv.org/pdf/2006.11239.pdf + associated github (https://github.com/lucidrains/denoising-diffusion-pytorch)
+[2] Jascha Sohl-Dickstein et al. “Deep Unsupervised Learning using Nonequilibrium Thermodynamics.” ICML 2015. https://arxiv.org/abs/1503.03585
+
+[3] J. Chang, February 2, 2007. "Markov chains
+" http://www.stat.yale.edu/~pollard/Courses/251.spring2013/Handouts/Chang-MarkovChains.pdf
+
+[4] Feller, W. On the theory of stochastic processes, with particular reference to applications. In Proceedings of the
+[First] Berkeley Symposium on Mathematical Statistics
+and Probability. The Regents of the University of California, 1949.
+
+[5] Deep Learning (Ian J. Goodfellow, Yoshua Bengio and Aaron Courville), MIT Press, 2016. https://www.deeplearningbook.org/
+
+[6] Weng, Lilian. 2018. From Autoencoder to Beta-VAE. "https://lilianweng.github.io/posts/2018-08-12-vae/"
 
 
-[12] IDDPM (https://arxiv.org/pdf/2102.09672.pdf) + associated github (https://github.com/openai/improved-diffusion)
+[7] Feller, W. (1966). An introduction to probability theory and its applications (Vol. 2). John Wiley & Sons.
 
+[8] Kingma, Diederik P.; Welling, Max (2014-05-01). "Auto-Encoding Variational Bayes". https://arxiv.org/abs/1312.6114.
 
-[13] Palette: Image-to-Image Diffusion Models (https://arxiv.org/pdf/2111.05826.pdf)
+[9] Ho, Jonathan, et al. (2020) "Denoising Diffusion Probabilistic Models" https://arxiv.org/pdf/2006.11239.pdf with associated github (https://github.com/lucidrains/denoising-diffusion-pytorch)
 
+[10] Saharia, Chitwan, et al. "Image Super-Resolution via Iterative Refinement
+". https://arxiv.org/pdf/2104.07636.pdf.
 
-[14] Image Super-Resolution via Iterative Refinement https://arxiv.org/pdf/2104.07636.pdf
+[11] Alex Nichol and Prafulla Dhariwal (2021), Improved denoising diffusion probabilistic models https://arxiv.org/pdf/2102.09672.pdf) + associated github (https://github.com/openai/improved-diffusion)
 
+[12] Chitwan Saharia, et al. (2022) Palette: Image-to-Image Diffusion Models https://arxiv.org/pdf/2111.05826.pdf
 
-[15] Attention is all you need https://arxiv.org/abs/1706.03762
+[13] Vaswani, A., et al. (2017) Attention is all you need https://arxiv.org/abs/1706.03762
 <!-- #endregion -->
