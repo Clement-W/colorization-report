@@ -84,8 +84,6 @@ Below, is a visualization of this project's sequencing/progress. The image displ
 
 ## Theory of Conditional Diffusion Process
 
-Brennan Whitfield - Clément Weinreich - Vivek Shome
-
 <div id="Theory_General"></div>
 
 ### General Idea
@@ -726,6 +724,7 @@ We repeat this until converged. Note, again, that our loss function is essential
 ## Results
 
 We trained the network for 5 epochs with 2000 images (see `notebook/train.ipynb`) in order to be able to produce results. The results of our project can be found in the notebook in the folder `demo`. First, the forward process is working well. Here is the forward process using the linear schedule on 300 timesteps ($T = 300$):
+
 <img src="assets/linearschedule.png" alt="Linear schedule" style="width: 800px" align="center"/>
 <br>
 <div style='text-align:center'> <b>Figure 5</b>: Forward process with linear schedule </div>
